@@ -131,13 +131,17 @@ description: 通用 C# WinForms 规范守卫与开发执行 skill。凡用户要
 - 数值输入优先项目 `MyNumericEdit` 等数值控件。
 - 固定选项下拉优先项目 `MySingleComobo` 等单选控件。
 - 数据源下拉优先项目 `MyDtComobo` 等数据控件。
+- 下拉容器优先项目 `MyDropDown` 等下拉容器控件。
+- 多选输入优先项目 `MyMultiSelect` 等多选控件。
 - 按钮优先项目 `MyButton` 等按钮控件。
 - 列表/表格优先项目 `MyGrid`、`MyFlexGrid`、`MyGridChild` 等网格控件。
-- 树优先项目已有树封装或树节点传递模式。
-- 时间范围优先项目已有双日期控件。
+- 树优先项目 `MyTreeView` 等树封装或树节点传递模式。
+- 时间范围优先项目 `DoubleDateEdit`、`DoubleDateEditH` 等双日期控件。
 - 如果项目存在领域专用控件库，如部门、人员、角色、项目、仓库等业务选择器，优先使用领域专用控件，而不是手工拼通用下拉。
 
-使用自定义控件时优先走其公开属性和事件，如 `Text`、`Value`、`SelectedValue`、`SelectedIndex`、`Enabled`、`ReadOnly`、`GotFocus`、`ValueChanged`、`SelectedValueChanged`、`RowChange`。不要绕过封装直接假设内部子控件结构，除非任务就是修改控件本身。
+使用自定义控件时优先走其公开属性和事件，如 `Captain`、`CaptainWidth`、`Text`、`Value`、`SelectedValue`、`SelectedIndex`、`Enabled`、`ReadOnly`、`GotFocus`、`ValueChanged`、`SelectedValueChanged`、`RowChange`。不要绕过封装直接假设内部子控件结构，除非任务就是修改控件本身。
+
+判空优先复用项目公共校验方法，如 `NotAllowEmpty(...)` 或相邻模块等价入口；不要把 `Text.Trim() == ""`、`SelectedValue == null` 等空值判断散落在按钮事件或多个函数中。业务合法性校验应写在判空之后，并集中在校验函数中处理。
 
 ### 5. 下拉控件规则
 
@@ -212,7 +216,9 @@ description: 通用 C# WinForms 规范守卫与开发执行 skill。凡用户要
 
 若项目中已有公共能力，优先直接复用，不在窗体或局部流程中重复造一套等价封装：
 
-- 公共提示、公共转换、公共导出、公共拼音、输入法、焦点处理、权限判断、缓存读取等能力，优先走项目公共入口。
+- 公共提示、公共转换、公共空值处理、公共导出、公共拼音、输入法、焦点处理、权限判断、缓存读取等能力，优先走项目公共入口。
+- 从 `DataRow` / `DataTable` / `object` 等来源转换具体类型时，优先复用项目公共转换器，如 `Common.ConvertObject` 或相邻模块等价入口。
+- 反向写入可空字段或处理 `NULL` / `DBNull` 时，优先复用项目公共空值处理入口，如 `Common.Tools.IsValueNull<T>(...)` 或相邻模块等价方法。
 - 不新增 `ShowInfo()`、`ShowError()`、`GetInt()`、`GetString()`、`ExportGrid()` 这类只包一行公共调用的一次性私有函数，除非它额外承载明确业务语义。
 - 不为了“代码看起来现代”而硬塞与当前项目不一致的新抽象、工具类或设计模式。
 - 如果相邻模块已经存在统一函数命名、转换入口或提示入口，新增代码优先贴近相邻模块，不另起一套平行写法。
@@ -248,7 +254,7 @@ description: 通用 C# WinForms 规范守卫与开发执行 skill。凡用户要
 - SQL 主体默认使用完整表名；是否使用表别名、字段别名，应贴近当前项目规则；无重名、无表达式语义需求时，不主动新增字段别名。
 - 多表关联优先使用清晰的 `INNER JOIN` / `LEFT JOIN`，避免扩散旧式逗号联表写法，除非项目既有方法明确保持旧风格。
 - 读取单值时优先使用 `GetSingle()`、`Exists()` 或项目等价方法，不为单字段返回 `DataSet`。
-- `NULL` / `DBNull` 处理优先复用项目公共转换与空值处理能力。
+- `NULL` / `DBNull` 处理优先复用项目公共转换与空值处理能力，如 `Common.ConvertObject`、`Common.Tools.IsValueNull<T>(...)` 或相邻模块等价入口。
 - 所有 `IDisposable` 对象必须使用 `using` 或等价可靠释放方式管理生命周期。
 
 ### 12. 代码风格与转换规则
@@ -263,7 +269,8 @@ description: 通用 C# WinForms 规范守卫与开发执行 skill。凡用户要
 - 字符串变量嵌入默认优先使用 `$""` 插值字符串；如果当前历史代码块大量使用 `string.Format(...)` 且保持一致更安全，则沿用原风格。
 - 三元运算符默认保持单行；如果单行装不下或可读性变差，改用 `if/else` 或临时变量，不把 `?`、`:` 拆到多行。
 - 局部变量是否允许 `var` 以当前项目规则为准；如果项目明确禁止，则使用显式类型声明，并覆盖 `foreach`、`out var`、模式匹配等容易误用隐式类型的场景。
-- 从 DataRow / DataTable / object 转换具体类型时，优先复用项目公共转换器；不要到处散落 `Convert.ToInt32(...)`、`Convert.ToDecimal(...)` 等重复转换。
+- 从 DataRow / DataTable / object 转换具体类型时，优先复用项目公共转换器，如 `Common.ConvertObject` 或相邻模块等价入口；不要到处散落 `Convert.ToInt32(...)`、`Convert.ToDecimal(...)` 等重复转换。
+- 反向写入可空字段或处理 `NULL` / `DBNull` 时，优先复用项目公共空值处理入口，如 `Common.Tools.IsValueNull<T>(...)` 或相邻模块等价方法。
 - 动软或项目模板生成的 `DataRowToModel(DataRow row)` 方法，若已有固定逐字段映射风格，新增字段应贴近原风格，不整体重写。
 - 优先使用 guard clause 减少嵌套；常规业务方法嵌套过深时拆分职责函数或早返回。
 - 捕获具体异常并提供明确错误信息；禁止空 `catch`、静默吞异常、无语义异常。
@@ -306,6 +313,7 @@ description: 通用 C# WinForms 规范守卫与开发执行 skill。凡用户要
 - [ ] 窗体继承了合适的项目基类，未无依据直接继承 `Form`。
 - [ ] 新增窗体保持 `*.cs`、`*.Designer.cs`、`*.resx` 配套。
 - [ ] 静态控件初始化与静态事件接线在 `InitializeComponent()` 中完成。
+- [ ] 展示型自定义输入控件的 `ReadOnly` / `Enabled` 设置位置已贴近相邻模块。
 - [ ] 构造函数没有堆业务逻辑；`Load` 只做初始化编排。
 - [ ] 自定义控件、领域控件、公共校验、公共转换、公共提示已优先复用。
 - [ ] 未新增只转发一行公共调用的一次性私有函数。
@@ -317,7 +325,7 @@ description: 通用 C# WinForms 规范守卫与开发执行 skill。凡用户要
 - [ ] UI 层只调用 BLL，不直接访问数据层。
 - [ ] UI 层未拼完整 SQL 主体，数据访问层使用项目既有链路。
 - [ ] 单值读取优先标量返回，多行多列才返回结果集。
-- [ ] 参数化查询、空值处理、资源释放、异常信息符合项目规则。
+- [ ] 参数化查询、公共转换、空值处理、资源释放、异常信息符合项目规则。
 - [ ] 代码风格、命名、注释、region 与相邻模块一致。
 - [ ] 未新增总结性 Markdown 文档、测试脚本或测试代码。
 - [ ] 未编译、未运行、未输出运行/编译命令作为收尾建议。
