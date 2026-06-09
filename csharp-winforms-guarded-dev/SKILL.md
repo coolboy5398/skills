@@ -222,6 +222,7 @@ description: 通用 C# WinForms 规范守卫与开发执行 skill。凡用户要
 若项目中已有公共能力，优先直接复用，不在窗体或局部流程中重复造一套等价封装：
 
 - 公共提示、公共转换、公共空值处理、公共导出、公共拼音、输入法、焦点处理、权限判断、缓存读取等能力，优先走项目公共入口。
+- 若项目存在 `Common/MessageHelper.cs`，WinForms 提示优先使用 `Common.MessageHelper`，如 `Common.MessageHelper.ShowWarning(this, "提示内容")`；显式传当前窗体作为 `owner`，不要在窗体内直接写 `MessageBox.Show(...)` 或再封装一次性私有 `ShowInfo()` / `ShowError()`。
 - 从 `DataRow` / `DataTable` / `object` 等来源转换具体类型时，优先复用项目公共转换器，如 `Common.ConvertObject` 或相邻模块等价入口。
 - 反向写入可空字段或处理 `NULL` / `DBNull` 时，优先复用项目公共空值处理入口，如 `Common.Tools.IsValueNull<T>(...)` 或相邻模块等价方法。
 - 不新增 `ShowInfo()`、`ShowError()`、`GetInt()`、`GetString()`、`ExportGrid()` 这类只包一行公共调用的一次性私有函数，除非它额外承载明确业务语义。
