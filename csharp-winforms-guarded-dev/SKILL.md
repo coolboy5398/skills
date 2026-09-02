@@ -341,6 +341,37 @@ description: 通用 C# WinForms 规范守卫与开发执行 skill。凡用户要
 - 文件较短、职责单一，或相邻窗体本来不用 region 时，不为了形式强行新增。
 - 修改既有文件时，优先沿用原文件已有 region 层级、顺序和命名方式，不仅为整理结构而大面积重排历史代码。
 
+#### 14.1 主从录入页 `#region` 模板（`DoubleFormRK1` 类）
+
+当窗体继承 `DoubleFormRK1` 或相邻模块中同类「主表 + 明细 Grid + 工具栏保存/完成」录入页时，默认采用 **「自定义函数 / 控件动作」** 顶层双块；不要把 `Load`、`FormClosing` 放进 region。
+
+推荐层级（优先对齐同模块相邻参考窗体，如药库入库 `Yk_Rk2.cs`）：
+
+```
+构造函数
+Load / FormClosing（region 外）
+
+#region 自定义函数
+  #region 初始化函数     FormInit、Grid 列初始化、按钮/控件状态
+  #region 显示函数       Zb_Clear / Zb_Show、Cb_Show、合计/统计回显
+  #region 检查语句       ZbCheck、CbCheck、状态/未保存变更检查
+  #region 按钮函数       DataSave / DataDelete / DataNew / DataPrint / DataComplete 等业务实现
+  #region 数据操作函数   DataSum、主表 Fill/Update、从表 Save/Fill、UI 线程封送等数据处理
+#endregion
+
+#region 控件动作
+  #region 按钮动作       Btn*_Click，只做分发，不堆完整业务流程
+  #region Grid动作       myGrid1_* 事件、明细录入/选择弹窗入口
+#endregion
+```
+
+执行要点：
+
+- **业务实现**放 `自定义函数 → 按钮函数 / 数据操作函数`；**事件入口**放 `控件动作 → 按钮动作 / Grid动作`。
+- 不要把 `保存与完成`、`删除`、`冲销`、`打印`、`速查`、`辅助`、`快捷键` 等拆成多个顶层平级 region；能归入上述二级块的，统一归入。
+- `ProcessCmdKey` 等快捷键重写可放在 `按钮函数` 末尾，不必单独建「快捷键」region。
+- 字典维护页（`*1/*2`）、纯查询页、配置页不适用本模板；仍按各自相邻窗体的 region 命名与层级执行。
+
 ### 15. 固定选项组规则
 
 少量固定选项组默认使用普通 `Panel` 承载 `RadioButton` / `CheckBox`，不要默认使用 `FlowLayoutPanel`。
@@ -393,6 +424,7 @@ WinForms 窗体或相关分层代码修改完成后，默认执行编译自检�
 - [ ] 查询类方法未引入 `SqlParameter` / `parameters`，SQL 拼接未使用 `AppendFormat(...)`，仅用于 SQL 拼接的枚举值已直接内联；写操作参数化、公共转换、空值处理、资源释放、异常信息符合项目规则。
 - [ ] 涉及数据库升级脚本时，已按项目既有脚本格式落盘；编码、命名、防重入、`GO` 分段、`PRINT` 状态输出和 `MS_Description` 扩展属性等要求已贴近项目样板。
 - [ ] 代码风格、命名、注释、region 与相邻模块一致。
+- [ ] `DoubleFormRK1` 类主从录入页已按 §14.1 检查 region 层级，业务实现与控件事件已分离。
 - [ ] 函数 / 方法的定义与调用参数均保持单行，未因参数数量或行长折行。
 - [ ] 新增或修改的公开方法已在 BLL / IDAL / SQLServerDAL 各层补齐一致的 `summary`、`param` 和必要的 `returns`，布尔参数的真值语义已说明。
 - [ ] 方法参数名可以脱离调用现场单独理解；布尔参数已表达 `true` 时的业务效果和必要的作用范围，未使用含糊的 `flag` / `filter` 命名。
